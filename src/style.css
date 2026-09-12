@@ -1,0 +1,218 @@
+:root {
+  color: #f8f0d0;
+  background: #071c2c;
+  font-family: Inter, ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(42, 145, 160, 0.34), transparent 34%),
+    #071c2c;
+}
+
+button {
+  min-width: 44px;
+  min-height: 44px;
+  font: inherit;
+}
+
+.app-shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: min(100%, 520px);
+  height: 100dvh;
+  margin: 0 auto;
+  padding:
+    max(14px, env(safe-area-inset-top))
+    max(14px, env(safe-area-inset-right))
+    max(14px, env(safe-area-inset-bottom))
+    max(14px, env(safe-area-inset-left));
+  background: linear-gradient(180deg, #113b4b 0%, #0d8090 48%, #09596e 100%);
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.55);
+  touch-action: none;
+  user-select: none;
+}
+
+.hud {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  background: rgba(7, 28, 44, 0.78);
+  backdrop-filter: blur(12px);
+}
+
+.eyebrow {
+  margin: 0 0 2px;
+  color: #ffcf64;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.05rem, 5vw, 1.4rem);
+  line-height: 1.1;
+}
+
+.resources {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.resources span {
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.game-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.game-frame::before,
+.game-frame::after {
+  position: absolute;
+  z-index: -2;
+  width: 140%;
+  height: 30%;
+  content: "";
+  border: 2px solid rgba(188, 244, 246, 0.16);
+  border-radius: 50%;
+  transform: rotate(-8deg);
+}
+
+.game-frame::before {
+  top: 20%;
+  left: -35%;
+}
+
+.game-frame::after {
+  right: -35%;
+  bottom: 18%;
+}
+
+.placeholder-island {
+  position: relative;
+  width: min(66vw, 310px);
+  aspect-ratio: 1.25;
+  border: 10px solid #e9b96c;
+  border-radius: 52% 44% 48% 38%;
+  background:
+    radial-gradient(circle at 58% 48%, #f8d88d 0 10%, transparent 11%),
+    linear-gradient(145deg, #f7d58a, #d9a457);
+  box-shadow:
+    0 16px 0 #b37a3b,
+    0 28px 35px rgba(0, 24, 38, 0.45),
+    0 0 0 9px rgba(205, 247, 240, 0.16);
+  transform: rotate(-3deg);
+}
+
+.palm,
+.castaway,
+.crate {
+  position: absolute;
+  filter: drop-shadow(0 8px 4px rgba(66, 42, 18, 0.25));
+  transform: rotate(3deg);
+}
+
+.palm {
+  top: 12%;
+  left: 12%;
+  font-size: clamp(4rem, 18vw, 7rem);
+}
+
+.castaway {
+  right: 25%;
+  bottom: 24%;
+  font-size: clamp(2.8rem, 12vw, 4.8rem);
+}
+
+.crate {
+  right: 10%;
+  bottom: 10%;
+  font-size: clamp(1.8rem, 8vw, 3rem);
+}
+
+.coming-soon {
+  position: absolute;
+  right: 0;
+  bottom: 8%;
+  left: 0;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  text-align: center;
+  text-shadow: 0 2px 10px #032434;
+}
+
+.coming-soon strong {
+  color: #ffcf64;
+  font-size: 1.25rem;
+  letter-spacing: 0.16em;
+}
+
+.coming-soon span {
+  font-size: 0.74rem;
+  opacity: 0.8;
+}
+
+.action-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.action-bar button {
+  padding: 12px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  color: rgba(248, 240, 208, 0.5);
+  background: rgba(7, 28, 44, 0.58);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+@media (min-width: 700px) and (orientation: landscape) {
+  .app-shell {
+    width: min(100%, 900px);
+  }
+
+  .placeholder-island {
+    width: min(42vw, 340px);
+  }
+}

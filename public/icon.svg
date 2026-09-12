@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Castaway Beacon icon">
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a9aad"/>
+      <stop offset="1" stop-color="#07546b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#sea)"/>
+  <path d="M0 362 Q128 322 256 362 T512 362 V512 H0Z" fill="#083f55" opacity=".7"/>
+  <ellipse cx="256" cy="399" rx="167" ry="35" fill="#e0ad60"/>
+  <path d="M212 370h88l-18-185h-52z" fill="#f7edcf"/>
+  <path d="M224 306h65l-6-61h-53z" fill="#d84a35"/>
+  <path d="M230 185h52l-8-37h-36z" fill="#1d3440"/>
+  <rect x="238" y="127" width="36" height="25" rx="6" fill="#ffd66b"/>
+  <path d="M256 115 155 82v65zm0 0 101-33v65z" fill="#ffe49a" opacity=".72"/>
+  <circle cx="256" cy="405" r="13" fill="#6f482d"/>
+</svg>

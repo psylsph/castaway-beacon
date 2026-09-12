@@ -1,0 +1,9 @@
+services:
+  game:
+    build: .
+    image: castaway-beacon:local
+    ports:
+      - "0.0.0.0:${PORT:-8081}:8080"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
