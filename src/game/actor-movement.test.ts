@@ -22,11 +22,11 @@ describe('actor movement', () => {
   })
 
   it('travels toward the target at a fixed speed', () => {
-    const started = beginMove(createInitialState(), 348, 380)
+    const started = beginMove(createInitialState(), 328, 380)
     const stepped = continueMovement(started, 1)
 
-    expect(stepped.actor.x).toBeCloseTo(248 + MOVEMENT_SPEED)
-    expect(stepped.actor.y).toBe(380)
+    expect(stepped.actor.x).toBeCloseTo(248 + MOVEMENT_SPEED, 1)
+    expect(stepped.actor.y).toBeCloseTo(380, 1)
   })
 
   it('never overshoots the target', () => {

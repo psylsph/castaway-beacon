@@ -1,5 +1,6 @@
 import type { ResourceNode } from './types'
 import { getDriftwoodSpawnPoint } from './driftwood'
+import { clampToSand, isWalkable } from './world'
 
 export interface DayScenario {
   readonly day: number
@@ -7,11 +8,20 @@ export interface DayScenario {
   readonly maxActiveNodes: number
 }
 
+export const DAY_OBJECTIVE: Readonly<Record<number, { driftwood: number }>> = {
+  1: { driftwood: 6 },
+  2: { driftwood: 8 },
+}
+
 const MAX_ACTIVE_NODES = 3
 
 function buildDriftwoodQueue(day: number, count: number): ResourceNode[] {
   return Array.from({ length: count }, (_, index) => {
-    const point = getDriftwoodSpawnPoint(index)
+    const raw = getDriftwoodSpawnPoint(index)
+    const point = clampToSand(raw.x, raw.y)
+    if (!isWalkable(point.x, point.y)) {
+      throw new Error(`Driftwood spawn ${index} is not walkable`)
+    }
     return {
       id: `day${day}-driftwood-${index + 1}`,
       kind: 'driftwood' as const,

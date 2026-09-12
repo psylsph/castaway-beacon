@@ -1,19 +1,13 @@
 import type { GameState } from './types'
+import { clampToSand, isWalkable } from './world'
 
 export const MOVEMENT_SPEED = 60 // px per second
 
-export interface MovementTarget {
-  readonly x: number
-  readonly y: number
-}
-
 export function beginMove(state: GameState, x: number, y: number): GameState {
-  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0) {
-    throw new Error('Invalid movement target')
-  }
+  const target = clampToSand(x, y)
   return {
     ...state,
-    actor: { ...state.actor, x: state.actor.x, y: state.actor.y, targetX: x, targetY: y, mode: 'moving' },
+    actor: { ...state.actor, targetX: target.x, targetY: target.y, mode: 'moving' },
   }
 }
 
@@ -34,9 +28,13 @@ export function continueMovement(state: GameState, deltaSeconds: number): GameSt
   const step = MOVEMENT_SPEED * deltaSeconds
   const nx = actor.x + ((actor.targetX - actor.x) / dist) * step
   const ny = actor.y + ((actor.targetY - actor.y) / dist) * step
+
+  // Stepwise safety: straight line between two sand points can still graze water.
+  const next = isWalkable(nx, ny) ? { x: nx, y: ny } : clampToSand(nx, ny)
+
   return {
     ...state,
-    actor: { ...actor, x: nx, y: ny },
+    actor: { ...actor, ...next },
   }
 }
 
