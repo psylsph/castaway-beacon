@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { getDriftwoodSpawnPoint } from './driftwood'
 import {
   buildPlatform,
   collectDriftwood,
@@ -17,6 +18,7 @@ export class IslandScene extends Phaser.Scene {
   private readonly driftwood = new Set<Phaser.GameObjects.Container>()
   private platformLayer?: Phaser.GameObjects.Container
   private statusLabel?: Phaser.GameObjects.Text
+  private nextDriftwoodIndex = 0
 
   constructor(onStateChange: StateListener) {
     super({ key: 'island' })
@@ -60,12 +62,7 @@ export class IslandScene extends Phaser.Scene {
   }
 
   collectNearest(): void {
-    let first = this.driftwood.values().next()
-    if (first.done) {
-      this.spawnDriftwood()
-      first = this.driftwood.values().next()
-    }
-
+    const first = this.driftwood.values().next()
     if (first.done) {
       this.announce('No driftwood nearby')
       return
@@ -93,10 +90,9 @@ export class IslandScene extends Phaser.Scene {
   private spawnDriftwood(): void {
     if (this.driftwood.size >= 6) return
 
-    const log = this.add.container(
-      Phaser.Math.Between(42, WORLD_WIDTH - 42),
-      Phaser.Math.Between(160, WORLD_HEIGHT - 130),
-    )
+    const point = getDriftwoodSpawnPoint(this.nextDriftwoodIndex)
+    this.nextDriftwoodIndex += 1
+    const log = this.add.container(point.x, point.y)
     log.add(this.add.ellipse(2, 10, 36, 10, 0x063449, 0.3))
     log.add(this.add.rectangle(0, 0, 32, 10, 0x9b5e35).setAngle(-18))
     log.add(this.add.circle(-10, 0, 5, 0xd28b4f))
