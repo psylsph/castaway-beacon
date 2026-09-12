@@ -2,7 +2,7 @@
 
 A touch-first, installable browser game about growing a lone sandbar into a thriving ocean settlement and completing humanity's last beacon.
 
-This repository currently contains the production-ready web/PWA/Docker foundation plus the first tested domain rule: collecting driftwood and spending it to expand the raft.
+This repository contains a touch-first Phaser prototype with driftwood collection, raft expansion, an installable PWA shell and a Docker deployment path. The first domain rules are covered by tests.
 
 ## Technology choices
 

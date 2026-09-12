@@ -8,5 +8,7 @@ describe('application shell', () => {
     expect(html).toContain('Castaway Beacon')
     expect(html).toContain('DAY 1')
     expect(html).toContain('id="game"')
+    expect(html).toContain('id="collect"')
+    expect(html).toContain('id="build"')
   })
 })
