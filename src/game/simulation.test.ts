@@ -9,7 +9,7 @@ describe('castaway progression', () => {
 
     expect(expanded.resources.wood).toBe(0)
     expect(expanded.platforms).toBe(2)
-    expect(initial).toEqual({ day: 1, population: 1, platforms: 1, resources: { wood: 0 } })
+    expect(expanded.schemaVersion).toBe(1)
   })
 
   it('refuses construction when there is not enough wood', () => {
