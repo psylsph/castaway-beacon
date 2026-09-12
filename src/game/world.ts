@@ -8,6 +8,7 @@ export const SAND_RADIUS_Y = 63
 /** Fraction of the sand radius the actor centre must stay inside. */
 export const WALK_LIMIT = 0.82
 
+/** Where raft platforms get placed (clamped onto sand when used). */
 export const BUILD_ORIGIN = { x: 150, y: 366 } as const
 
 export function isWalkable(x: number, y: number): boolean {
@@ -23,6 +24,8 @@ export function clampToSand(x: number, y: number): { x: number; y: number } {
   const dy = y - SAND_CENTER.y
   const rx = SAND_RADIUS_X * WALK_LIMIT
   const ry = SAND_RADIUS_Y * WALK_LIMIT
+
+  if (dx === 0 && dy === 0) return { x: SAND_CENTER.x, y: SAND_CENTER.y }
 
   // Project onto the ellipse boundary along the ray from the centre.
   const t = 1 / Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry))
