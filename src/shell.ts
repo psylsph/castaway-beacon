@@ -9,6 +9,7 @@ export function renderAppShell(): string {
         <div class="resources" aria-label="Resources">
           <span id="population">👤 1/20</span>
           <span id="wood">🪵 0</span>
+          <span id="food">🐟 0</span>
         </div>
       </header>
 
@@ -16,8 +17,10 @@ export function renderAppShell(): string {
 
       <nav class="action-bar" aria-label="Game actions">
         <button id="collect" type="button">Collect</button>
+        <button id="fish" type="button">Fish</button>
+        <button id="dig" type="button">Dig</button>
         <button id="build" type="button" disabled>Build raft</button>
-        <button id="survivors" type="button" disabled>Survivors</button>
+        <button id="hut" type="button" disabled>Build hut</button>
       </nav>
     </main>
   `

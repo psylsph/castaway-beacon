@@ -5,10 +5,12 @@ import {
   tickDay,
   DAY_LENGTH_SECONDS,
 } from './day-cycle'
-import { placeStructure } from './buildings'
+import { canBuild, placeStructure, HUT_SLOTS } from './buildings'
 import { actorArrives, beginMove, continueMovement } from './actor-movement'
 import { createInitialState, type GameState } from './simulation'
 import { SAND_CENTER, clampToSand } from './world'
+import { beginWork, completeWork } from './survival-actions'
+import { nextStoryBeat, processArrivals, type StoryBeat } from './story'
 import type { ResourceNode } from './types'
 
 const WORLD_WIDTH = 480
@@ -30,6 +32,7 @@ type StateListener = (state: GameState) => void
 type PendingAction =
   | { kind: 'collect'; nodeId: string }
   | { kind: 'build'; slotId: string; x: number; y: number }
+  | { kind: 'hut'; slotId: string; x: number; y: number }
 
 export class IslandScene extends Phaser.Scene {
   private state: GameState = createInitialState()
@@ -43,6 +46,8 @@ export class IslandScene extends Phaser.Scene {
   private announceTimer?: Phaser.Time.TimerEvent
   private pendingAction?: PendingAction
   private emittedDay = 0
+  private pendingWork?: 'fishing' | 'digging'
+  private storyQueue: StoryBeat | null = null
 
   constructor(onStateChange: StateListener) {
     super({ key: 'island' })
@@ -136,6 +141,7 @@ export class IslandScene extends Phaser.Scene {
     })
 
     this.reconcileNodes()
+    this.refreshHuts()
     this.emitState()
   }
 
@@ -197,7 +203,37 @@ export class IslandScene extends Phaser.Scene {
       this.runPendingAction()
     }
 
+    // arrival-based work (fishing / digging)
+    if (this.pendingWork && actorArrives(this.state)) {
+      this.state = completeWork(this.state)
+      const done = this.pendingWork
+      this.pendingWork = undefined
+      if (done === 'fishing') {
+        this.announce(`Caught ${this.state.resources.food > 2 ? 'fish' : 'your first fish'}! +2 food`)
+      } else {
+        this.announce(
+          this.state.landLevel > 0 && this.state.digProgress === 0
+            ? 'The sandbar is wider now!'
+            : `Digging deeper… (${this.state.digProgress}/4)`,
+        )
+      }
+      this.emitState()
+    }
+
+    // narrative: check for story beats and arrivals every frame (state-gated, deduped)
+    const beat = nextStoryBeat(this.state)
+    if (beat && this.storyQueue?.id !== beat.id) {
+      this.storyQueue = beat
+      this.state = { ...this.state, storiesSeen: [...this.state.storiesSeen, beat.id] }
+      this.showStory(beat)
+    }
+
     if (this.state.day !== this.emittedDay) {
+      const arrival = processArrivals(this.state)
+      this.state = arrival.state
+      if (arrival.joined) {
+        this.announce(`${arrival.joined} washed ashore — welcome her!`)
+      }
       this.emitState()
     }
   }
@@ -235,8 +271,57 @@ export class IslandScene extends Phaser.Scene {
     this.collectFromNode(target)
   }
 
+  buildHut(): void {
+    if (this.pendingAction || this.pendingWork) {
+      this.announce('Already busy')
+      return
+    }
+
+    const check = canBuild(this.state, 'hut')
+    if (!check.ok) {
+      this.announce(check.reason ?? 'Cannot build a hut yet')
+      return
+    }
+
+    const index = this.state.structures.filter((s) => s.kind === 'hut').length
+    if (index >= HUT_SLOTS.length) {
+      this.announce('No room for another hut')
+      return
+    }
+
+    const slot = HUT_SLOTS[index]
+    const spot = clampToSand(slot.x, slot.y)
+    const slotId = `hut:${index + 1}`
+
+    this.state = beginMove(this.state, spot.x, spot.y - 6)
+    this.pendingAction = { kind: 'hut', slotId, x: spot.x, y: spot.y }
+    this.announce('Walking to the hut site…')
+  }
+
+  goFishing(): void {
+    if (this.pendingAction || this.pendingWork) {
+      this.announce('Already busy')
+      return
+    }
+
+    this.state = beginWork(this.state, 'fishing')
+    this.pendingWork = 'fishing'
+    this.announce('Heading to the fishing shallows…')
+  }
+
+  goDigging(): void {
+    if (this.pendingAction || this.pendingWork) {
+      this.announce('Already busy')
+      return
+    }
+
+    this.state = beginWork(this.state, 'digging')
+    this.pendingWork = 'digging'
+    this.announce('Going to dig new ground…')
+  }
+
   private collectFromNode(node: ResourceNode): void {
-    if (this.pendingAction) {
+    if (this.pendingAction || this.pendingWork) {
       this.announce('Already busy')
       return
     }
@@ -271,6 +356,10 @@ export class IslandScene extends Phaser.Scene {
           })
         }
         this.announce('+1 driftwood')
+      } else if (action.kind === 'hut') {
+        this.state = placeStructure(this.state, 'hut', action.slotId, action.x, action.y)
+        this.refreshHuts()
+        this.announce('A hut stands — beds for more survivors!')
       } else {
         this.state = placeStructure(this.state, 'raft-platform', action.slotId, action.x, action.y)
         this.refreshPlatforms()
@@ -340,6 +429,63 @@ export class IslandScene extends Phaser.Scene {
         .setScale(SPRITE_SCALE)
         .setDepth(structure.y)
     }
+  }
+
+  private refreshHuts(): void {
+    const built = this.state.structures.filter((s) => s.kind === 'hut')
+    for (const [index, structure] of built.entries()) {
+      this.add
+        .image(structure.x, structure.y, 'game-atlas', index % 2 === 0 ? 'hut_a' : 'hut_b')
+        .setOrigin(0.5, 0.78)
+        .setScale(SPRITE_SCALE)
+        .setDepth(structure.y)
+    }
+  }
+
+  private showStory(beat: StoryBeat): void {
+    const width = 380
+    const panel = this.add.container(WORLD_WIDTH / 2, 180).setDepth(90)
+    const bg = this.add
+      .rectangle(0, 0, width, 110, 0x063449, 0.94)
+      .setStrokeStyle(2, 0xbaf0e8, 0.7)
+    const title = this.add
+      .text(0, -38, beat.title, {
+        color: '#ffd98a',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '17px',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5)
+    const body = this.add
+      .text(0, 4, beat.body, {
+        color: '#fff5d6',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '12px',
+        wordWrap: { width: width - 40 },
+        align: 'center',
+      })
+      .setOrigin(0.5, 0)
+    const hint = this.add
+      .text(0, 42, 'tap to continue', {
+        color: '#baf0e8',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '10px',
+      })
+      .setOrigin(0.5)
+    panel.add([bg, title, body, hint])
+    panel.setAlpha(0)
+    this.tweens.add({ targets: panel, alpha: 1, duration: 220 })
+
+    bg.setInteractive({ useHandCursor: true })
+    bg.on('pointerdown', () => {
+      bg.removeAllListeners()
+      this.tweens.add({
+        targets: panel,
+        alpha: 0,
+        duration: 180,
+        onComplete: () => panel.destroy(),
+      })
+    })
   }
 
   private announce(message: string): void {

@@ -1,6 +1,6 @@
 import type { GameState, Structure } from './types'
 
-export type BlueprintKind = 'raft-platform' | 'water-collector' | 'raft-expansion'
+export type BlueprintKind = 'raft-platform' | 'water-collector' | 'raft-expansion' | 'hut'
 
 export interface BuildCost {
   readonly wood: number
@@ -18,6 +18,12 @@ export const BLUEPRINTS: Readonly<Record<BlueprintKind, Blueprint>> = {
     kind: 'raft-platform',
     label: 'Raft Platform',
     costs: [{ wood: 5 }],
+    perDayLimit: 1,
+  },
+  hut: {
+    kind: 'hut',
+    label: 'Hut',
+    costs: [{ wood: 10 }],
     perDayLimit: 1,
   },
   'water-collector': {
@@ -115,3 +121,10 @@ export function placeStructure(
     structures: [...state.structures, structure],
   }
 }
+
+/** Hut build slots on the inner sand (away from the raft ring). Validated ≥80px apart. */
+export const HUT_SLOTS: readonly { x: number; y: number }[] = [
+  { x: 210, y: 372 },
+  { x: 292, y: 356 },
+  { x: 258, y: 396 },
+]

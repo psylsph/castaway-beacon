@@ -23,9 +23,14 @@ export function createInitialState(): GameState {
     resources: { wood: 0, food: 0, water: 0 },
     actor: { ...ACTOR_START, mode: 'idle' },
     clockSeconds: 0,
+    workActivity: 'none',
     nodes: driftwoodNodesForDay(1),
     structures: INITIAL_STRUCTURES,
     completedObjectives: [],
+    digProgress: 0,
+    landLevel: 0,
+    storiesSeen: [],
+    arrivalsDone: [],
   }
 }
 
