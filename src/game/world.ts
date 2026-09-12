@@ -8,9 +8,6 @@ export const SAND_RADIUS_Y = 63
 /** Fraction of the sand radius the actor centre must stay inside. */
 export const WALK_LIMIT = 0.82
 
-/** Where raft platforms get placed (clamped onto sand when used). */
-export const BUILD_ORIGIN = { x: 150, y: 366 } as const
-
 export function isWalkable(x: number, y: number): boolean {
   const dx = (x - SAND_CENTER.x) / (SAND_RADIUS_X * WALK_LIMIT)
   const dy = (y - SAND_CENTER.y) / (SAND_RADIUS_Y * WALK_LIMIT)

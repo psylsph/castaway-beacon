@@ -8,12 +8,22 @@ import {
 import { placeStructure } from './buildings'
 import { actorArrives, beginMove, continueMovement } from './actor-movement'
 import { createInitialState, type GameState } from './simulation'
-import { SAND_CENTER, clampToSand, BUILD_ORIGIN } from './world'
+import { SAND_CENTER, clampToSand } from './world'
 import type { ResourceNode } from './types'
 
 const WORLD_WIDTH = 480
 const WORLD_HEIGHT = 640
 const MAX_ACTIVE_NODES = 3
+/** Uniform sprite scale — integer so pixelArt rendering stays crisp. */
+const SPRITE_SCALE = 2
+
+/** Shore ring slots for raft platforms (validated ≥92px apart for 88px-wide rafts). */
+const BUILD_SLOTS: readonly { x: number; y: number }[] = [
+  { x: 240, y: 408 },
+  { x: 338, y: 382 },
+  { x: 142, y: 382 },
+  { x: 240, y: 304 },
+]
 
 type StateListener = (state: GameState) => void
 
@@ -25,7 +35,6 @@ export class IslandScene extends Phaser.Scene {
   private state: GameState = createInitialState()
   private readonly onStateChange: StateListener
   private readonly nodeVisuals = new Map<string, Phaser.GameObjects.Image>()
-  private platformLayer?: Phaser.GameObjects.Container
   private statusLabel?: Phaser.GameObjects.Text
   private actor?: Phaser.GameObjects.Sprite
   private actorShadow?: Phaser.GameObjects.Ellipse
@@ -46,14 +55,13 @@ export class IslandScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.add.image(SAND_CENTER.x, SAND_CENTER.y, 'island-bg')
-
-    this.platformLayer = this.add.container().setDepth(20)
+    this.add.image(SAND_CENTER.x, SAND_CENTER.y, 'island-bg').setDepth(-10)
 
     // campfire (animated) at the sand centre
     this.fireSprite = this.add
-      .sprite(SAND_CENTER.x, SAND_CENTER.y - 14, 'game-atlas', 'campfire_0')
-      .setDepth(25)
+      .sprite(SAND_CENTER.x, SAND_CENTER.y - 20, 'game-atlas', 'campfire_0')
+      .setDepth(SAND_CENTER.y)
+      .setScale(SPRITE_SCALE)
     this.anims.create({
       key: 'fire-flicker',
       frames: this.anims.generateFrameNames('game-atlas', {
@@ -65,10 +73,13 @@ export class IslandScene extends Phaser.Scene {
     })
     this.fireSprite.play('fire-flicker')
 
-    // decorative palms on the sand edge
-    this.add.image(150, 330, 'game-atlas', 'palm_a').setDepth(22)
-    this.add.image(336, 380, 'game-atlas', 'palm_b').setDepth(22)
-    this.add.image(268, 306, 'game-atlas', 'palm_a').setDepth(21).setScale(0.85)
+    // decorative palms on the sand edge (depth = y for correct occlusion)
+    this.add.image(150, 330, 'game-atlas', 'palm_a').setDepth(330).setScale(SPRITE_SCALE)
+    this.add.image(336, 380, 'game-atlas', 'palm_b').setDepth(380).setScale(SPRITE_SCALE)
+    this.add
+      .image(268, 306, 'game-atlas', 'palm_a')
+      .setDepth(306)
+      .setScale(SPRITE_SCALE * 0.85)
 
     this.nightOverlay = this.add
       .rectangle(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, WORLD_WIDTH, WORLD_HEIGHT, 0x0a1a3f, 1)
@@ -89,10 +100,11 @@ export class IslandScene extends Phaser.Scene {
 
     // actor with soft shadow
     this.actorShadow = this.add
-      .ellipse(0, 0, 16, 6, 0x063449, 0.35)
+      .ellipse(0, 0, 30, 11, 0x063449, 0.35)
       .setDepth(38)
     this.actor = this.add
       .sprite(this.state.actor.x, this.state.actor.y, 'game-atlas', 'castaway_idle_down')
+      .setScale(SPRITE_SCALE)
       .setDepth(40)
 
     this.anims.create({
@@ -145,8 +157,9 @@ export class IslandScene extends Phaser.Scene {
     if (this.actor && this.actorShadow) {
       this.actor.x = this.state.actor.x
       this.actor.y = this.state.actor.y
+      this.actor.setDepth(this.state.actor.y + 1)
       this.actorShadow.x = this.state.actor.x
-      this.actorShadow.y = this.state.actor.y + 14
+      this.actorShadow.y = this.state.actor.y + 12
 
       const target = this.state.actor
       const walking = this.state.actor.mode === 'moving'
@@ -196,10 +209,13 @@ export class IslandScene extends Phaser.Scene {
     }
 
     const index = this.state.structures.filter((s) => s.kind === 'raft-platform').length
-    const column = index % 3
-    const row = Math.floor(index / 3)
-    const raw = { x: BUILD_ORIGIN.x + column * 46, y: BUILD_ORIGIN.y + row * 20 }
-    const spot = clampToSand(raw.x, raw.y)
+    if (index >= BUILD_SLOTS.length) {
+      this.announce('No room left on the sandbar')
+      return
+    }
+
+    const slot = BUILD_SLOTS[index]
+    const spot = clampToSand(slot.x, slot.y)
     const slotId = `raft-platform:${this.state.day}:${index + 1}`
 
     this.state = beginMove(this.state, spot.x, spot.y)
@@ -249,7 +265,7 @@ export class IslandScene extends Phaser.Scene {
           this.tweens.add({
             targets: visual,
             alpha: 0,
-            scale: 1.35,
+            scale: SPRITE_SCALE * 1.35,
             duration: 180,
             onComplete: () => visual.destroy(),
           })
@@ -296,8 +312,12 @@ export class IslandScene extends Phaser.Scene {
   private spawnNodeVisual(node: ResourceNode): void {
     const log = this.add
       .image(node.x, node.y, 'game-atlas', 'driftwood')
-      .setDepth(30)
-      .setInteractive(new Phaser.Geom.Rectangle(-12, -6, 24, 14), Phaser.Geom.Rectangle.Contains)
+      .setDepth(node.y)
+      .setScale(SPRITE_SCALE)
+    log.setInteractive(
+      new Phaser.Geom.Rectangle(-14, -8, 28, 20),
+      Phaser.Geom.Rectangle.Contains,
+    )
     log.on('pointerdown', () => this.collectFromNode(node))
     this.nodeVisuals.set(node.id, log)
 
@@ -312,14 +332,13 @@ export class IslandScene extends Phaser.Scene {
   }
 
   private refreshPlatforms(): void {
-    if (!this.platformLayer) return
-
-    this.platformLayer.removeAll(true)
     const built = this.state.structures.filter((s) => s.kind === 'raft-platform')
 
     for (const structure of built) {
-      const raft = this.add.image(structure.x, structure.y, 'game-atlas', 'raft_platform')
-      this.platformLayer.add(raft)
+      this.add
+        .image(structure.x, structure.y, 'game-atlas', 'raft_platform')
+        .setScale(SPRITE_SCALE)
+        .setDepth(structure.y)
     }
   }
 
