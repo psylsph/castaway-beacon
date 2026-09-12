@@ -9,10 +9,11 @@ export interface ResourceNode {
 
 export interface Structure {
   readonly id: string
-  readonly kind: 'campfire' | 'raft-platform' | 'water-collector'
+  readonly kind: 'campfire' | 'raft-platform' | 'water-collector' | 'raft-expansion'
   readonly x: number
   readonly y: number
   readonly level: number
+  readonly builtOnDay?: number
 }
 
 export interface Actor {
