@@ -21,6 +21,8 @@ export interface Actor {
   readonly y: number
   readonly mode: 'idle' | 'moving' | 'working'
   readonly targetId?: string
+  readonly targetX?: number
+  readonly targetY?: number
 }
 
 export interface GameState {
