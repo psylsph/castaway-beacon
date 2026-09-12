@@ -37,6 +37,7 @@ export interface GameState {
     readonly water: number
   }
   readonly actor: Actor
+  readonly clockSeconds: number
   readonly nodes: readonly ResourceNode[]
   readonly structures: readonly Structure[]
   readonly completedObjectives: readonly string[]

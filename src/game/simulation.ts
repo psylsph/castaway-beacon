@@ -22,6 +22,7 @@ export function createInitialState(): GameState {
     platforms: 1,
     resources: { wood: 0, food: 0, water: 0 },
     actor: { ...ACTOR_START, mode: 'idle' },
+    clockSeconds: 0,
     nodes: driftwoodNodesForDay(1),
     structures: INITIAL_STRUCTURES,
     completedObjectives: [],
