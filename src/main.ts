@@ -19,7 +19,10 @@ const buildButton = document.querySelector<HTMLButtonElement>('#build')
 
 function updateHud(state: GameState): void {
   if (dayLabel) dayLabel.textContent = `DAY ${state.day}`
-  if (populationLabel) populationLabel.textContent = `👤 ${state.population}/20`
+  if (populationLabel) {
+    populationLabel.textContent =
+      state.phase === 'night' ? `🌙 ${state.population}/20` : `👤 ${state.population}/20`
+  }
   if (woodLabel) woodLabel.textContent = `🪵 ${state.resources.wood}`
   if (buildButton) buildButton.disabled = state.resources.wood < 5
 }
