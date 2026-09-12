@@ -29,7 +29,7 @@ function updateHud(state: GameState): void {
 
 const scene = new IslandScene(updateHud)
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   width: 480,
@@ -48,10 +48,28 @@ new Phaser.Game({
   },
 })
 
+// Debug handle for automated verification (no effect on gameplay)
+declare global {
+  interface Window { __castawayGame?: Phaser.Game }
+}
+window.__castawayGame = game
+
 document.querySelector<HTMLButtonElement>('#collect')?.addEventListener('click', () => {
   scene.collectNearest()
 })
 
+// Debug handle for automated verification (no effect on gameplay)
+declare global {
+  interface Window { __castawayGame?: Phaser.Game }
+}
+window.__castawayGame = game
+
 document.querySelector<HTMLButtonElement>('#build')?.addEventListener('click', () => {
   scene.buildRaft()
 })
+
+// Debug handle for automated verification (no effect on gameplay)
+declare global {
+  interface Window { __castawayGame?: Phaser.Game }
+}
+window.__castawayGame = game
